@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Repo Radar · Robin Schmid</title>
+<meta name="description" content="New and fast-rising open-source repositories in robotics and machine learning, refreshed daily.">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Instrument+Serif&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="../assets/style.css">
+<script src="../assets/site.js"></script>
+</head>
+<body>
+<header class="topbar">
+  <div class="inner">
+    <a class="brand" href="../">Robin Schmid</a>
+    <nav class="nav" aria-label="Main">
+      <a href="../papers/">Papers</a>
+      <a href="./" aria-current="page">Repos</a>
+    </nav>
+    <button class="icon-btn" id="theme" type="button" aria-label="Toggle theme"></button>
+  </div>
+</header>
+
+<main class="digest">
+  <header class="head">
+    <div class="eyebrow mono">Repo radar</div>
+    <h1>Open-source code worth a look</h1>
+    <p>New GitHub repositories in the areas I follow, the code released with papers from the
+      digest, and new projects from labs I watch. Refreshed daily and sorted by stars gained
+      this week.</p>
+    <div class="updated mono" id="updated"></div>
+  </header>
+
+  <div class="tools">
+    <span class="label mono" style="color:var(--mute);margin-right:4px">Sort</span>
+    <button class="chip" data-sort="rising">Rising</button>
+    <button class="chip" data-sort="new">Newest</button>
+    <button class="chip" data-sort="stars">Most stars</button>
+    <span class="sep" aria-hidden="true"></span>
+    <label class="visually-hidden" for="q">Search repositories</label>
+    <input type="search" class="search" id="q" autocomplete="off" placeholder="Search name, description, topic">
+  </div>
+  <div class="chiprow" id="srcchips"></div>
+  <div class="chiprow" id="langchips"></div>
+  <p class="count mono" id="count"></p>
+
+  <div id="list" class="repos-grid"><p class="note">Loading…</p></div>
+</main>
+
+<footer class="site">Data from the <a href="https://docs.github.com/en/rest">GitHub API</a>. “This week” is measured from daily snapshots; until a repo has a week of history it is estimated from its age.</footer>
+
+<script src="../assets/repos.js"></script>
+</body>
+</html>

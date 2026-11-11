@@ -1,0 +1,78 @@
+name: Update digests & deploy
+
+on:
+  schedule:
+    - cron: "30 6 * * *"   # daily, 06:30 UTC (after arXiv's evening announcement in US Eastern time)
+  workflow_dispatch:
+    inputs:
+      lookback:
+        description: "Days of arXiv submissions to scan (blank = value in digest.toml)"
+        required: false
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: site
+  cancel-in-progress: false
+
+jobs:
+  update:
+    # A push only redeploys the site; the scheduled and manual runs refresh the data first.
+    if: github.event_name != 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+          cache: pip
+          cache-dependency-path: scripts/requirements.txt
+      - run: pip install -r scripts/requirements.txt
+
+      - name: Fetch papers
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          LOOKBACK: ${{ inputs.lookback }}
+        run: python scripts/fetch_papers.py ${LOOKBACK:+--lookback "$LOOKBACK"}
+
+      - name: Fetch repos
+        if: ${{ !cancelled() }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python scripts/fetch_repos.py
+
+      - name: Commit data
+        if: ${{ !cancelled() }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add site/data state
+          if git diff --cached --quiet; then echo "No changes"; exit 0; fi
+          git commit -m "data: digest $(date -u +%F)"
+          git pull --rebase --autostash
+          git push
+
+  deploy:
+    needs: update
+    # Deploy whatever data got committed, even if one scraper failed (the failure still shows in Actions).
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.ref_name }}   # includes the data commit from the update job
+      - uses: actions/configure-pages@v6
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: site
+      - id: deployment
+        uses: actions/deploy-pages@v5

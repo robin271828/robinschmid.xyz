@@ -1,0 +1,2 @@
+# Only needed for the optional Claude summaries; the scrapers themselves use the standard library.
+anthropic>=2.8,<3

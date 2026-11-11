@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Paper Digest · Robin Schmid</title>
+<meta name="description" content="A daily pick of new robotics and machine-learning papers from arXiv, plus recent papers from selected venues.">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Instrument+Serif&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="../assets/style.css">
+<script src="../assets/site.js"></script>
+</head>
+<body>
+<header class="topbar">
+  <div class="inner">
+    <a class="brand" href="../">Robin Schmid</a>
+    <nav class="nav" aria-label="Main">
+      <a href="./" aria-current="page">Papers</a>
+      <a href="../repos/">Repos</a>
+    </nav>
+    <button class="icon-btn" id="theme" type="button" aria-label="Toggle theme"></button>
+  </div>
+</header>
+
+<main class="digest">
+  <header class="head">
+    <div class="eyebrow mono">Paper digest</div>
+    <h1>New papers, every day</h1>
+    <p id="intro">Every morning a bot reads the new arXiv submissions in robotics and machine learning,
+      keeps the ones that match the topics I follow, and lists them here with a short summary.
+      The Venues view collects recent papers accepted at the conferences and journals I track.</p>
+    <div class="updated mono" id="updated"></div>
+  </header>
+
+  <div class="tools">
+    <button class="chip" data-view="daily" aria-pressed="true">Daily</button>
+    <button class="chip" data-view="venues" aria-pressed="false">Venues</button>
+    <span class="sep" aria-hidden="true"></span>
+    <label class="visually-hidden" for="q">Search papers</label>
+    <input type="search" class="search" id="q" autocomplete="off" placeholder="Search title, summary, author, arXiv ID">
+  </div>
+  <div class="chiprow" id="venuechips" hidden></div>
+  <div class="chiprow" id="tagchips"></div>
+  <p class="count mono" id="count"></p>
+
+  <div id="list"><p class="note">Loading…</p></div>
+  <button class="chip more" id="more" hidden>Show older days</button>
+</main>
+
+<footer class="site">
+  Data from <a href="https://arxiv.org">arXiv</a>. Thank you to arXiv for use of its open access interoperability.
+</footer>
+
+<script src="../assets/papers.js"></script>
+</body>
+</html>

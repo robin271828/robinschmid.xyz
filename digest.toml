@@ -1,0 +1,132 @@
+# What the daily bot scrapes for robinschmid.xyz/papers and robinschmid.xyz/repos.
+#
+# Edit this file, commit and push. The next scheduled run (daily, 06:30 UTC) picks it up,
+# or start one right away: GitHub → Actions → "Update digests & deploy" → Run workflow.
+#
+# Keyword matching is case-insensitive and matches word starts, so "quadruped" also
+# matches "quadrupedal" and "humanoid" matches "humanoids". A hit in the title counts
+# double. A paper's keyword score is the sum over the topics it hits.
+
+# ---------------------------------------------------------------- papers (arXiv)
+[papers]
+# arXiv categories to scan. Full list: https://arxiv.org/category_taxonomy
+categories = ["cs.RO", "cs.LG", "cs.CV", "cs.AI"]
+lookback_days = 3      # each run looks at the last N days of submissions (repeats are skipped)
+max_per_day = 12       # most papers kept for one day
+min_score = 2          # minimum keyword score (2 = one title hit, or two topics in the abstract)
+# Papers whose primary category is listed here get +1.5 (keeps cs.LG/cs.CV noise down).
+boost_categories = ["cs.RO"]
+# Papers by these authors are always included (name as written on arXiv).
+authors = []
+# Papers whose title or abstract contains any of these are dropped.
+exclude = ["survey of", "a survey", "position paper"]
+
+# One block per topic. The topic name becomes the paper's tag on the site.
+[[papers.topics]]
+name = "locomotion"
+keywords = ["locomotion", "legged", "quadruped", "biped", "parkour"]
+
+[[papers.topics]]
+name = "humanoid"
+keywords = ["humanoid", "whole-body control", "motion retargeting"]
+
+[[papers.topics]]
+name = "manipulation"
+keywords = ["dexterous", "manipulation", "grasping", "bimanual", "in-hand"]
+
+[[papers.topics]]
+name = "robot-learning"
+keywords = ["imitation learning", "diffusion policy", "vision-language-action", "VLA", "robot foundation model", "behavior cloning"]
+
+[[papers.topics]]
+name = "rl"
+keywords = ["reinforcement learning", "sim-to-real", "sim2real", "policy optimization"]
+
+[[papers.topics]]
+name = "navigation"
+keywords = ["legged navigation", "traversability", "rough terrain", "elevation map", "path planning"]
+
+[[papers.topics]]
+name = "world-models"
+keywords = ["world model", "video prediction model", "learned simulator"]
+
+# ---------------------------------------------------------------- venues
+# Papers on arXiv whose author comment or journal ref names one of these venues
+# (e.g. "Accepted to CoRL 2026") get a venue badge, and the Venues view lists the
+# recent ones that also match your topics.
+[venues]
+lookback_days = 150     # how far back the Venues view reaches
+max_per_venue = 30
+include_workshops = false
+include_submitted = false   # "Submitted to ICRA 2027" and similar
+
+# match = the spellings to look for. Single words (CoRL, ICRA) must match case exactly;
+# phrases with spaces match in any case.
+list = [
+  { name = "CoRL",              match = ["CoRL", "Conference on Robot Learning"] },
+  { name = "RSS",               match = ["RSS", "Robotics: Science and Systems"] },
+  { name = "ICRA",              match = ["ICRA"] },
+  { name = "IROS",              match = ["IROS"] },
+  { name = "Humanoids",         match = ["Humanoids", "International Conference on Humanoid Robots"] },
+  { name = "Science Robotics",  match = ["Science Robotics"] },
+  { name = "RA-L",              match = ["RA-L", "RAL", "Robotics and Automation Letters"] },
+  { name = "NeurIPS",           match = ["NeurIPS", "Neural Information Processing Systems"] },
+  { name = "ICLR",              match = ["ICLR"] },
+  { name = "ICML",              match = ["ICML"] },
+  { name = "CVPR",              match = ["CVPR"] },
+]
+
+# ---------------------------------------------------------------- AI summaries (optional)
+# With an ANTHROPIC_API_KEY repository secret, Claude reads the candidates, scores how
+# relevant each one is to the interests below, and writes a two-sentence plain-language
+# summary. Without the secret the site uses keyword scores and the abstract's opening.
+[llm]
+enabled = true
+model = "claude-opus-5-5"
+effort = "medium"        # low | medium | high
+min_relevance = 5        # 0-10; papers Claude rates lower are not shown
+interests = """
+Robot learning for legged and humanoid robots: locomotion, whole-body control,
+loco-manipulation, sim-to-real reinforcement learning, perception for navigation
+in rough terrain, and robot foundation models. Less interested in pure LLM/NLP work,
+medical imaging, or autonomous driving unless the method transfers to robots.
+"""
+
+# ---------------------------------------------------------------- repos (GitHub)
+[repos]
+created_within_days = 30   # "new" = created in the last N days
+min_stars = 25             # default star threshold for the searches below
+keep_days = 60             # a repo stays on the page this long after it was first found
+max_items = 150
+include_paper_code = true  # also track the GitHub repos linked from digest papers
+# New repos from these users/orgs are always included, regardless of stars.
+watch_owners = ["leggedrobotics", "NVlabs", "google-deepmind", "facebookresearch", "huggingface", "unitreerobotics"]
+
+# One block per label. q is one GitHub search, or a list of searches that share the label.
+# GitHub can't OR qualifiers (topic:a OR topic:b), so list those separately. Syntax:
+# https://docs.github.com/en/search-github/searching-on-github/searching-for-repositories
+[[repos.queries]]
+label = "robotics"
+q = "topic:robotics"
+
+[[repos.queries]]
+label = "humanoid"
+q = "humanoid in:name,description,topics"
+
+[[repos.queries]]
+label = "legged"
+q = "legged OR quadruped OR locomotion in:name,description,topics"
+
+[[repos.queries]]
+label = "robot-learning"
+q = ["topic:robot-learning", "topic:imitation-learning", "topic:vla"]
+
+[[repos.queries]]
+label = "rl"
+q = "topic:reinforcement-learning"
+min_stars = 50
+
+[[repos.queries]]
+label = "simulation"
+q = ["topic:isaac-lab", "topic:mujoco", "topic:isaac-sim"]
+min_stars = 10
