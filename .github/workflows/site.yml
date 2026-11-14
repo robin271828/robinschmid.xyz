@@ -25,7 +25,8 @@ jobs:
     # A push only redeploys the site; the scheduled and manual runs refresh the data first.
     if: github.event_name != 'push'
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    # The first run with an API key also rates the venue backlog, and figure lookups wait 15 s each.
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-python@v7

@@ -179,6 +179,12 @@ main.digest { max-width: var(--max); margin: 0 auto; padding: 48px var(--side) 9
 .card h3 { margin: 10px 0 0; font: 600 16.5px/1.35 var(--sans); text-wrap: pretty; letter-spacing: -.005em; }
 .card h3 a { text-decoration: none; }
 .card h3 a:hover { text-decoration: underline; text-underline-offset: 3px; }
+/* Paper figures are drawn on white, so the frame stays white in dark mode too. */
+.card .fig {
+  display: block; margin: 12px 0 0; aspect-ratio: 16 / 10; overflow: hidden;
+  background: #fff; border: 1px solid var(--line); border-radius: 8px;
+}
+.card .fig img { display: block; width: 100%; height: 100%; object-fit: contain; padding: 6px; }
 .card .summary { margin: 8px 0 0; color: var(--ink-2); font-size: 14.5px; line-height: 1.58; }
 .card .auth { margin: 10px 0 0; color: var(--mute); font-size: 13px; line-height: 1.45; }
 .card .tags { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 12px; }

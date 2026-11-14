@@ -77,10 +77,16 @@
       e.project ? `<a href="${esc(e.project)}" target="_blank" rel="noopener">Project</a>` : "",
     ].join("");
     const showAbstract = e.abstract && e.abstract !== e.summary;
+    const fig = e.fig ? `<a class="fig" href="${esc(e.abs_url)}" target="_blank" rel="noopener" tabindex="-1">` +
+      `<img src="${esc(e.fig)}" alt="Figure from the paper" loading="lazy" decoding="async"></a>` : "";
+    // With a figure, keep Claude's summary but drop the abstract's opening lines (the full
+    // abstract stays under "Abstract"). If the image fails to load, the text comes back.
+    const hideText = e.fig && e.relevance == null;
     return `<article class="card">
       <div class="meta mono">${meta}</div>
       <h3><a href="${esc(e.abs_url)}" target="_blank" rel="noopener">${esc(e.title)}</a></h3>
-      <p class="summary">${esc(e.summary)}</p>
+      ${fig}
+      <p class="summary"${hideText ? " hidden" : ""}>${esc(e.summary)}</p>
       ${authors(e.authors)}
       ${tags ? `<div class="tags">${tags}</div>` : ""}
       ${showAbstract ? `<details><summary>Abstract</summary><p>${esc(e.abstract)}</p></details>` : ""}
@@ -178,6 +184,14 @@
       state.days += DAYS_PER_PAGE; render();
     }
   });
+
+  // Image errors don't bubble, so listen in the capture phase.
+  document.addEventListener("error", (ev) => {
+    const fig = ev.target instanceof HTMLImageElement && ev.target.closest(".card .fig");
+    if (!fig) return;
+    fig.closest(".card").querySelector(".summary")?.removeAttribute("hidden");
+    fig.remove();
+  }, true);
 
   const q = $("q");
   q.value = state.q;

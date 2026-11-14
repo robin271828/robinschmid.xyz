@@ -9,6 +9,9 @@ Output:
   site/data/papers/index.json     {"months": [...], "updated": "YYYY-MM-DD", "llm": bool}
   site/data/papers/YYYY-MM.json   {"entries": [...]}   one file per month of submission date
   site/data/papers/venues.json    {"updated": ..., "venues": [{"name", "papers": [...]}]}
+
+Each paper gets "fig" (an image URL from its arXiv HTML version) once one is found, or
+"fig_tries" while none is.
 """
 from __future__ import annotations
 
@@ -19,6 +22,8 @@ import sys
 import time
 import xml.etree.ElementTree as ET
 from collections import defaultdict
+from html.parser import HTMLParser
+from urllib.parse import urljoin
 
 import summarize
 from common import SITE_DATA, http_get, load_config, log, read_json, today, write_json
@@ -36,6 +41,9 @@ GITHUB_RX = re.compile(r"https?://(?:www\.)?github\.com/([\w.-]+)/([\w.-]+)", re
 URL_RX = re.compile(r"https?://[^\s,;)\]}>\"']+", re.I)
 SUBMITTED_RX = re.compile(r"\b(submitted|under review|in submission|under submission|in review)\b", re.I)
 WORKSHOP_RX = re.compile(r"\bworkshops?\b", re.I)
+HTML_BASE = "https://arxiv.org/html/"
+HTML_PAUSE = 15.0  # arxiv.org/robots.txt: Crawl-delay 15
+FIG_MAX_TRIES = 3  # runs to wait for an HTML version before giving up on a paper
 
 
 # ------------------------------------------------------------------ arXiv API
@@ -111,6 +119,104 @@ def parse_entry(e: ET.Element) -> dict:
         "code": code,
         "project": project,
     }
+
+
+# ------------------------------------------------------------------ figures
+
+class _FigureParser(HTMLParser):
+    """Picks the image of the first figure (not table) in an arXiv HTML paper.
+
+    In a figure made of several panels it takes the largest one. Images under 120x60 px
+    (icons, logos) don't count.
+    """
+
+    def __init__(self) -> None:
+        super().__init__(convert_charrefs=True)
+        self.depth = 0
+        self.in_figure = False
+        self.images: list[tuple[int, str]] = []
+        self.src: str | None = None
+
+    def handle_starttag(self, tag, attrs):
+        if self.src:
+            return
+        a = dict(attrs)
+        classes = (a.get("class") or "").split()
+        if tag == "figure":
+            if self.depth == 0:
+                self.in_figure = "ltx_figure" in classes and "ltx_table" not in classes
+                self.images = []
+            self.depth += 1
+        elif tag == "img" and self.in_figure and "ltx_graphics" in classes and a.get("src"):
+            try:
+                w, h = int(a.get("width") or 0), int(a.get("height") or 0)
+            except ValueError:
+                w = h = 0
+            if w and h and (w < 120 or h < 60):
+                return
+            self.images.append((w * h if w and h else 10**6, a["src"]))
+
+    def handle_endtag(self, tag):
+        if tag != "figure" or self.depth == 0 or self.src:
+            return
+        self.depth -= 1
+        if self.depth == 0 and self.in_figure and self.images:
+            self.src = max(self.images)[1]
+
+
+def find_figure(aid: str) -> tuple[str | None, bool]:
+    """Return (image URL, settled). settled=False means no HTML version yet: try again later."""
+    url = HTML_BASE + aid
+    try:
+        page = http_get(url, retries=1).decode("utf-8", "replace")
+    except Exception:  # 404 = no HTML version (yet); anything else is worth another try too
+        return None, False
+    parser = _FigureParser()
+    parser.feed(page)
+    return (urljoin(url, parser.src), True) if parser.src else (None, True)
+
+
+class Figures:
+    """Gives papers a figure, within a per-run budget and arXiv's crawl delay."""
+
+    def __init__(self, cfg: dict) -> None:
+        pc = cfg["papers"]
+        self.on = pc.get("figures", True)
+        self.left = pc.get("figure_lookups_per_run", 50)
+        self.known: dict[str, dict] = {}
+        self.last = 0.0
+        self.found = self.looked = 0
+
+    def remember(self, entries: list[dict]) -> None:
+        for e in entries:
+            if "fig" in e or "fig_tries" in e:
+                self.known[e["id"]] = {k: e[k] for k in ("fig", "fig_tries") if k in e}
+
+    def fill(self, entries: list[dict]) -> None:
+        """Look up figures for the entries that still lack one, in the given order."""
+        for e in entries:
+            if e["id"] in self.known and "fig" not in e and "fig_tries" not in e:
+                e.update(self.known[e["id"]])
+            if not self.on or e.get("fig") or e.get("fig_tries", 0) >= FIG_MAX_TRIES:
+                continue
+            if self.left <= 0:
+                continue
+            self.left -= 1
+            time.sleep(max(0.0, self.last + HTML_PAUSE - time.monotonic()))
+            src, settled = find_figure(e["id"])
+            self.last = time.monotonic()
+            self.looked += 1
+            if src:
+                e["fig"] = src
+                e.pop("fig_tries", None)
+                self.found += 1
+            else:
+                e["fig_tries"] = FIG_MAX_TRIES if settled else e.get("fig_tries", 0) + 1
+            self.remember([e])
+
+    def report(self) -> None:
+        if self.looked:
+            log(f"  figures: looked up {self.looked}, found {self.found}")
 
 
 # ------------------------------------------------------------------ scoring
@@ -220,7 +326,7 @@ def load_months() -> dict[str, list[dict]]:
     return {m: read_json(DATA / f"{m}.json", {"entries": []})["entries"] for m in index["months"]}
 
 
-def update_daily(cfg: dict, lookback: int) -> int:
+def update_daily(cfg: dict, lookback: int, figs: Figures) -> int:
     pc = cfg["papers"]
     topics = compile_topics(cfg)
     matchers = venue_matchers(cfg)
@@ -292,6 +398,10 @@ def update_daily(cfg: dict, lookback: int) -> int:
             months.setdefault(month_of(day), []).append(entry)
             added += 1
 
+    newest_first = sorted((e for es in months.values() for e in es), key=lambda e: e["date"], reverse=True)
+    figs.fill(newest_first)
+    figs.report()
+
     for m, entries in months.items():
         entries.sort(key=lambda e: (e["date"], e.get("relevance") or 0, e["kw_score"]), reverse=True)
         write_json(DATA / f"{m}.json", {"entries": entries}, compact=True)
@@ -303,7 +413,7 @@ def update_daily(cfg: dict, lookback: int) -> int:
 
 # ------------------------------------------------------------------ venues
 
-def update_venues(cfg: dict) -> None:
+def update_venues(cfg: dict, figs: Figures) -> None:
     vc = cfg.get("venues", {})
     if not vc.get("list"):
         return
@@ -316,6 +426,8 @@ def update_venues(cfg: dict) -> None:
 
     previous = read_json(DATA / "venues.json", {"venues": []})
     prev_by_name = {v["name"]: v for v in previous.get("venues", [])}
+    for v in previous.get("venues", []):
+        figs.remember(v["papers"])
     out = []
     for v in vc["list"]:
         fields = " OR ".join(f"{term('co', m)} OR {term('jr', m)}" for m in v["match"])
@@ -356,6 +468,8 @@ def update_venues(cfg: dict) -> None:
         log(f"  {v['name']}: {len(found)} hits, {len(papers)} kept")
         out.append({"name": v["name"], "papers": papers})
 
+    figs.fill(sorted((p for v in out for p in v["papers"]), key=lambda p: p["date"], reverse=True))
+    figs.report()
     write_json(DATA / "venues.json", {"updated": str(end), "since": str(start), "venues": out}, compact=True)
 
 
@@ -366,17 +480,19 @@ def main() -> int:
     ap.add_argument("--skip-daily", action="store_true")
     args = ap.parse_args()
     cfg = load_config()
+    figs = Figures(cfg)
+    figs.remember(e for es in load_months().values() for e in es)
     ok = True
     if not args.skip_daily:
         try:
-            update_daily(cfg, args.lookback or cfg["papers"].get("lookback_days", 3))
+            update_daily(cfg, args.lookback or cfg["papers"].get("lookback_days", 3), figs)
         except Exception as e:
             log(f"daily papers failed: {e!r}")
             ok = False
     if not args.skip_venues:
         log("venues:")
         try:
-            update_venues(cfg)
+            update_venues(cfg, figs)
         except Exception as e:
             log(f"venues failed: {e!r}")
             ok = False

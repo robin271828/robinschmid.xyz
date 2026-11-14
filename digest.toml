@@ -16,10 +16,16 @@ max_per_day = 12       # most papers kept for one day
 min_score = 2          # minimum keyword score (2 = one title hit, or two topics in the abstract)
 # Papers whose primary category is listed here get +1.5 (keeps cs.LG/cs.CV noise down).
 boost_categories = ["cs.RO"]
-# Papers by these authors are always included (name as written on arXiv).
-authors = []
+# Papers by these authors are always included (name as written on arXiv). They skip the
+# relevance filter and take a day's slots first, so keep this to a few people.
+authors = ["Marco Hutter"]
 # Papers whose title or abstract contains any of these are dropped.
 exclude = ["survey of", "a survey", "position paper"]
+# Show one figure per paper (usually Fig. 1) from the paper's arXiv HTML version. arXiv asks
+# for 15 s between page requests, so each run looks up at most this many papers; older ones
+# get their figure on later runs.
+figures = true
+figure_lookups_per_run = 50
 
 # One block per topic. The topic name becomes the paper's tag on the site.
 [[papers.topics]]
@@ -40,7 +46,7 @@ keywords = ["imitation learning", "diffusion policy", "vision-language-action", 
 
 [[papers.topics]]
 name = "rl"
-keywords = ["reinforcement learning", "sim-to-real", "sim2real", "policy optimization"]
+keywords = ["reinforcement learning", "policy optimization"]
 
 [[papers.topics]]
 name = "navigation"
@@ -48,7 +54,20 @@ keywords = ["legged navigation", "traversability", "rough terrain", "elevation m
 
 [[papers.topics]]
 name = "world-models"
-keywords = ["world model", "video prediction model", "learned simulator"]
+keywords = ["world model", "video prediction model", "learned simulator", "neural simulator", "learned dynamics", "dynamics model", "latent dynamics"]
+
+# Bare "simulation" would match almost every robotics abstract, so these are specific phrases.
+[[papers.topics]]
+name = "simulation"
+keywords = ["physics simulation", "physics simulator", "robot simulator", "robotics simulator", "differentiable simulation", "differentiable simulator", "differentiable physics", "physics engine", "GPU-accelerated simulation", "Isaac Lab", "Isaac Gym", "Isaac Sim"]
+
+[[papers.topics]]
+name = "sim2real"
+keywords = ["sim-to-real", "sim2real", "domain randomization", "reality gap"]
+
+[[papers.topics]]
+name = "real2sim"
+keywords = ["real-to-sim", "real2sim", "digital twin", "system identification"]
 
 # ---------------------------------------------------------------- venues
 # Papers on arXiv whose author comment or journal ref names one of these venues
@@ -88,8 +107,16 @@ min_relevance = 5        # 0-10; papers Claude rates lower are not shown
 interests = """
 Robot learning for legged and humanoid robots: locomotion, whole-body control,
 loco-manipulation, sim-to-real reinforcement learning, perception for navigation
-in rough terrain, and robot foundation models. Less interested in pure LLM/NLP work,
-medical imaging, or autonomous driving unless the method transfers to robots.
+in rough terrain, and robot foundation models.
+Simulation for robotics: physics simulators and engines, GPU-parallel and
+differentiable simulation, contact modelling. Real-to-sim: building simulation
+models and digital twins from real data (system identification, actuator models,
+scene and object reconstruction). Sim-to-real transfer: domain randomization,
+closing the reality gap. World models and learned simulators that robots can
+plan or train in.
+Less interested in pure LLM/NLP work, medical imaging, or autonomous driving
+unless the method transfers to robots. Digital twins for factories, IoT or
+networks are off-topic.
 """
 
 # ---------------------------------------------------------------- repos (GitHub)

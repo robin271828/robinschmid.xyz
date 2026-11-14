@@ -28,6 +28,10 @@ Edit [`digest.toml`](digest.toml) and push. Topics, keywords, arXiv categories, 
 authors, repo searches and watched GitHub orgs are all there. To refresh right away:
 GitHub → Actions → **Update digests & deploy** → Run workflow (set *lookback* to backfill more days).
 
+**Figures**: each card shows one figure from the paper (usually Fig. 1), taken from the paper's
+arXiv HTML version and loaded from arxiv.org. arXiv asks for 15 s between page requests, so a run
+looks up at most `figure_lookups_per_run` papers; papers without an HTML version keep their text.
+
 **Venues** come from arXiv too: a paper counts for CoRL if its author comment or journal
 reference says so ("Accepted to CoRL 2026"). That covers most robotics and ML venues, but misses
 papers that never go on arXiv.
