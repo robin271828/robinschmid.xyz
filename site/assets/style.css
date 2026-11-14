@@ -73,9 +73,8 @@ img { max-width: 100%; }
 .topbar.scrolled { border-bottom-color: var(--line); }
 .topbar .inner {
   max-width: var(--max); margin: 0 auto; padding: 14px var(--side);
-  display: flex; align-items: center; gap: 20px;
+  display: flex; align-items: center; justify-content: flex-end; gap: 20px;
 }
-.brand { font: 400 24px/1 var(--serif); text-decoration: none; letter-spacing: -.01em; margin-right: auto; }
 .nav { display: flex; gap: 4px; }
 .nav a {
   text-decoration: none; color: var(--mute); padding: 6px 10px; border-radius: 6px; font-size: 14.5px;
@@ -90,7 +89,6 @@ img { max-width: 100%; }
 .icon-btn svg { width: 16px; height: 16px; }
 @media (max-width: 480px) {
   .topbar .inner { gap: 8px; }
-  .brand { font-size: 20px; }
   .nav a { padding: 6px 7px; font-size: 14px; }
 }
 
