@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Robin Schmid</title>
+<meta name="description" content="Robin Schmid — robotics engineer. Projects, a daily paper digest and an open-source repo radar.">
+<meta property="og:title" content="Robin Schmid">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://robinschmid.xyz/">
+<meta name="color-scheme" content="dark">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap">
+<script src="assets/site.js"></script>
+<style>
+  /* The homepage has its own look: dark, monospace, text on the left and the project planet on the right. */
+  :root { --bg: #070a14; --ink: #e8eaee; --dim: #8b919c; --line: #1f2430; --link: #aab4c8; color-scheme: dark; }
+  *, *::before, *::after { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 400 14px/1.7 "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace; -webkit-font-smoothing: antialiased; }
+  a { color: var(--link); text-decoration: none; }
+  a:hover, a:focus-visible { color: #fff; text-decoration: underline; text-underline-offset: 3px; }
+  .page { display: grid; grid-template-columns: minmax(0, 400px) minmax(0, 1fr); min-height: 100vh; min-height: 100svh; }
+  .text { padding: 40px clamp(18px, 2.6vw, 36px) 36px; font-size: 13px; display: flex; flex-direction: column; }
+  .who { display: flex; align-items: center; gap: 14px; }
+  .who img { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; background: var(--line); }
+  h1 { margin: 0; font: inherit; font-weight: 500; }
+  section { margin-top: 26px; }
+  h2 { margin: 0 0 2px; font: inherit; color: var(--dim); }
+  section p, section ul { margin: 0; padding: 0 0 0 12px; list-style: none; }
+  .contact { margin-top: auto; padding-top: 44px; }
+  .contact li span, .feeds li span { color: var(--dim); }
+  .planet { position: sticky; top: 0; height: 100vh; height: 100svh; }
+  .planet iframe { width: 100%; height: 100%; border: 0; display: block; background: var(--bg); }
+  @media (max-width: 900px) {
+    .page { grid-template-columns: 1fr; }
+    .planet { position: relative; height: 78vh; height: 78svh; order: 2; border-top: 1px solid var(--line); }
+    .contact { margin-top: 26px; padding-top: 0; padding-bottom: 8px; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+  <main class="text">
+    <div class="who">
+      <img src="assets/profile.jpg" alt="" width="44" height="44">
+      <h1>robin schmid</h1>
+    </div>
+
+    <section>
+      <h2>about</h2>
+      <p>I am fascinated by deploying robots in the real world and understanding how we can leverage simulation to train and evaluate autonomy. My work has ranged from legged robots hiking in the Alps and off-road driving in the desert to building simulators for autonomous systems.</p>
+    </section>
+
+    <!-- A "current" section goes here once its wording is agreed. -->
+
+    <section>
+      <h2>previous</h2>
+      <p>I was a research engineer at the <a href="https://rsl.ethz.ch">Robotic Systems Lab</a> at ETH Zurich, where we taught a legged robot to hike on its own (<a href="https://roam-hiking.github.io">ROAM</a>, published in Science Robotics). Before that, I was a visiting researcher at <a href="https://www.jpl.nasa.gov">NASA JPL</a>, working on perception for the DARPA RACER off-road driving programme and on the DARPA Subterranean Challenge. I studied robotics and mechanical engineering at <a href="https://ethz.ch">ETH Zurich</a>.</p>
+    </section>
+
+    <section class="feeds">
+      <h2>reading</h2>
+      <ul>
+        <li><a href="papers/">paper digest</a> <span id="feed-papers"></span></li>
+        <li><a href="repos/">repo radar</a> <span id="feed-repos"></span></li>
+      </ul>
+    </section>
+
+    <section class="contact">
+      <ul>
+        <li><span>github:</span> <a href="https://github.com/robin271828" rel="me">github.com/robin271828</a></li>
+        <li><span>linkedin:</span> <a href="https://www.linkedin.com/in/schmid-robin/" rel="me">schmid-robin</a></li>
+      </ul>
+    </section>
+  </main>
+
+  <aside class="planet">
+    <iframe src="projects/?embed" title="My projects on a small planet: drag to turn it, click a light to visit a project" loading="eager"></iframe>
+  </aside>
+</div>
+
+<script>
+(async () => {
+  const { getJSON } = Site;
+  try {
+    const idx = await getJSON("data/papers/index.json");
+    const m = idx.months?.[0];
+    if (m) {
+      const { entries } = await getJSON(`data/papers/${m}.json`);
+      const latest = entries.reduce((a, e) => (e.date > a ? e.date : a), "");
+      const n = entries.filter((e) => e.date === latest).length;
+      if (n) document.getElementById("feed-papers").textContent = `· ${n} new`;
+    }
+  } catch {}
+  try {
+    const r = await getJSON("data/repos/repos.json");
+    if (r.items?.length) document.getElementById("feed-repos").textContent = `· ${r.items.length} tracked`;
+  } catch {}
+})();
+</script>
+</body>
+</html>

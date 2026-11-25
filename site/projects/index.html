@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Projects · Robin Schmid</title>
+<meta name="robots" content="noindex">
+<meta name="description" content="Robin Schmid's robotics projects, laid out on a small planet you can travel around.">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Instrument+Serif&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="../assets/style.css">
+<script src="../assets/site.js"></script>
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+} }
+</script>
+<style>
+  html.planet { scroll-snap-type: y mandatory; background: #070a14; }
+  html.planet body { background: transparent; }
+  html.planet .topbar { position: fixed; left: 0; right: 0; background: linear-gradient(rgb(7 10 20 / .55), transparent); backdrop-filter: none; -webkit-backdrop-filter: none; border: 0; }
+  html.planet .topbar .nav a, html.planet .topbar .icon-btn { color: #c9ced8; }
+  html.planet .topbar .nav a[aria-current="page"] { color: #fff; }
+  html.planet .topbar .nav a:hover, html.planet .topbar .icon-btn:hover { color: #fff; background: rgb(255 255 255 / .1); }
+  html.planet .topbar .icon-btn { border-color: rgb(255 255 255 / .2); }
+  #stage { position: fixed; inset: 0; width: 100%; height: 100%; display: block; z-index: 0; touch-action: pan-y; cursor: grab; }
+  #stage.looking { cursor: grabbing; }
+  .snap { height: 100vh; height: 100svh; scroll-snap-align: start; scroll-snap-stop: always; }
+  .card {
+    position: fixed; z-index: 5; left: var(--side); bottom: 76px; width: min(400px, calc(100vw - 2 * var(--side)));
+    background: color-mix(in srgb, var(--card) 88%, transparent); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+    border: 1px solid var(--line); border-radius: 14px; padding: 20px 22px; transition: opacity .25s, transform .25s;
+  }
+  .card.out { opacity: 0; transform: translateY(8px); }
+  .card .meta { color: var(--mute); }
+  .card h1 { margin: 6px 0 0; font: 400 34px/1.05 var(--serif); letter-spacing: -.01em; }
+  .card p { margin: 10px 0 0; color: var(--ink-2); font-size: 15px; }
+  .card .tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+  .card .tags span { font: 400 11.5px var(--mono); color: var(--mute); border: 1px solid var(--line); border-radius: 999px; padding: 2px 8px; }
+  .card .more { margin-top: 12px; display: flex; gap: 14px; font-size: 14px; }
+  .card .more { flex-wrap: wrap; row-gap: 4px; }
+  .card .more a { color: var(--accent); white-space: nowrap; }
+  .rail {
+    position: fixed; z-index: 5; left: 50%; bottom: 20px; transform: translateX(-50%); display: flex; align-items: center; gap: 4px;
+    background: color-mix(in srgb, var(--card) 88%, transparent); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+    border: 1px solid var(--line); border-radius: 999px; padding: 5px 8px; max-width: calc(100vw - 16px);
+  }
+  .rail button { border: 0; background: transparent; color: var(--mute); cursor: pointer; font: 500 13px var(--sans); padding: 6px 10px; border-radius: 999px; white-space: nowrap; }
+  .rail button:hover { color: var(--ink); background: var(--bg-2); }
+  .rail button[aria-current="true"] { color: var(--ink); background: var(--bg-2); }
+  .rail .dot span { display: none; }
+  .rail .dot::before { content: ""; display: block; width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+  .rail .dot[aria-current="true"]::before { background: var(--accent); }
+  @media (min-width: 1280px) { .rail .dot span { display: inline; } .rail .dot::before { display: none; } }
+  @media (max-width: 600px) { .card { bottom: 68px; padding: 14px 16px; } .card h1 { font-size: 26px; } }
+  .card .hint { margin: 0; color: var(--mute); }
+  .card { width: min(360px, calc(100vw - 2 * var(--side))); padding: 16px 18px; }
+  .card h1 { font-size: 28px; }
+  .card p { font-size: 14px; }
+  .card .desc { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; line-clamp: 3; overflow: hidden; cursor: pointer; }
+  .card .toggle { display: inline-flex; align-items: center; gap: 5px; margin-top: 6px; padding: 3px 0; border: 0; background: none; color: var(--accent); font: 500 13px var(--sans); cursor: pointer; }
+  .card .toggle::after { content: "▾"; font-size: 11px; }
+  .card.open .toggle::after { content: "▴"; }
+  .card .toggle:hover, .card .toggle:focus-visible { text-decoration: underline; text-underline-offset: 3px; }
+  .card.open { max-height: calc(100vh - 150px); overflow: auto; }
+  html.embed .card .toggle { font: 500 12px var(--mono); }
+  .card.open .desc { display: block; }
+  .card:not(.open) .desc { color: var(--mute); }
+  .jump { list-style: none; margin: 10px 0 0; padding: 0; }
+  .jump button { display: flex; justify-content: space-between; gap: 12px; width: 100%; text-align: left; border: 0; border-top: 1px solid var(--line); background: transparent; color: var(--ink); font: inherit; font-size: 14px; padding: 8px 4px; cursor: pointer; }
+  .jump button:hover, .jump button:focus-visible { background: var(--bg-2); color: var(--accent); }
+  .jump button span { color: var(--mute); }
+  #notes { position: fixed; inset: 0; z-index: 3; pointer-events: none; overflow: hidden; }
+  #notes div { position: absolute; left: 0; top: 0; max-width: 230px; opacity: 0; transition: opacity .35s; font: 400 11.5px/1.35 var(--mono); color: #f2f4f8; background: rgb(12 16 26 / .72); border-left: 2px solid #ffd27a; border-radius: 0 6px 6px 0; padding: 4px 8px; }
+  #notes div.on { opacity: 1; }
+  #labels { position: fixed; inset: 0; z-index: 4; pointer-events: none; overflow: hidden; }
+  #labels button { position: absolute; left: 0; top: 0; pointer-events: auto; cursor: pointer; white-space: nowrap; opacity: 0; visibility: hidden; transition: opacity .25s, background .15s;
+    font: 500 12px var(--mono); color: #f2f4f8; background: rgb(12 16 26 / .78); border: 1px solid rgb(255 255 255 / .22); border-radius: 999px; padding: 4px 10px; }
+  #labels button.on { opacity: 1; visibility: visible; }
+  #labels button:hover, #labels button:focus-visible { background: #ffd27a; color: #14161a; border-color: #ffd27a; }
+  html.embed .jump button { font-size: 12.5px; padding: 6px 2px; }
+  .rail .full { color: var(--mute); text-decoration: none; padding: 4px 8px; font-size: 15px; }
+  .rail .full:hover { color: var(--ink); }
+  html.embed { scroll-snap-type: none; overflow: hidden; }
+  html.embed { --card: #101319; --ink: #ececec; --ink-2: #c3c6cc; --mute: #8b9099; --line: #262a30; --bg-2: #1b1e24; --accent: #8fb0ff; --serif: var(--mono); --sans: var(--mono); }
+  html.embed .card h1 { font-weight: 500; letter-spacing: 0; line-height: 1.25; font-size: 17px !important; }
+  html.embed .card p { font-size: 12.5px !important; line-height: 1.6; }
+  html.embed .topbar { display: none; }
+  html.embed #stage { touch-action: none; }
+  html.embed .card { left: 14px; bottom: 62px; width: min(300px, calc(100vw - 28px)); max-height: calc(100vh - 90px); overflow: auto; padding: 14px 16px; }
+  html.embed .card h1 { font-size: 26px; }
+  html.embed .card p { font-size: 14px; }
+  html.embed .rail { bottom: 12px; }
+  html.embed .rail .dot span { display: none; } html.embed .rail .dot::before { display: block; }
+  .fallback { position: relative; z-index: 5; max-width: 720px; margin: 0 auto; padding: 96px var(--side) 64px; }
+  .fallback article { border: 1px solid var(--line); border-radius: 12px; background: var(--card); padding: 18px 20px; margin-top: 14px; }
+  .fallback h2 { margin: 4px 0 0; font: 400 26px var(--serif); }
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="inner">
+    <nav class="nav" aria-label="Main">
+      <a href="./" aria-current="page">Projects</a>
+      <a href="../papers/">Papers</a>
+      <a href="../repos/">Repos</a>
+    </nav>
+    <button class="icon-btn" id="theme" type="button" aria-label="Toggle theme"></button>
+  </div>
+</header>
+
+<canvas id="stage" aria-label="A small planet with one place per project"></canvas>
+<div id="labels"></div>
+<div id="notes"></div>
+<aside class="card out" id="card" aria-live="polite"></aside>
+<nav class="rail" id="rail" aria-label="Places" hidden></nav>
+<main id="snaps"></main>
+<noscript><div class="fallback"><p>This page needs JavaScript.</p></div></noscript>
+
+<script type="module" src="planet.js?v=27"></script>
+</body>
+</html>

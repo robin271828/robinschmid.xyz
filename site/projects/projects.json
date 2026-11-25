@@ -1,0 +1,174 @@
+{
+  "_help": "One entry per project, in tour order (newest first). biome: alpine | campus | factory | cave | desert | savanna | sim | ctf. robot: quadruped | humanoid | dualarm | vehicle | aerial | messages. Optional: lat/lon (degrees) to place it on the planet, links [{label, url}]. Empty fields are hidden. \"draft\": true hides an entry (add ?drafts to the page address to see it).",
+  "projects": [
+    {
+      "slug": "simulation",
+      "short": "Simulation",
+      "title": "Simulation for autonomous systems",
+      "when": "",
+      "where": "Stealth startup",
+      "biome": "sim",
+      "robot": "aerial",
+      "tagline": "Tech lead for simulation: architecting and building the simulator for autonomous systems.",
+      "description": "",
+      "tags": [
+        "simulation",
+        "synthetic data for computer vision",
+        "system identification",
+        "sim-to-real",
+        "multi-agent RL",
+        "world models"
+      ],
+      "links": []
+    },
+    {
+      "slug": "hiking",
+      "short": "ROAM",
+      "title": "ROAM: hiking with ANYmal",
+      "when": "2023–2026",
+      "where": "Robotic Systems Lab, ETH Zurich · Science Robotics",
+      "biome": "alpine",
+      "robot": "roam",
+      "tagline": "ROAM: a legged robot that reads trails, signs and risks with a vision-language model and hikes kilometres on its own.",
+      "description": "ROAM joins the world knowledge of a vision-language model with locomotion and local planning policies learned in simulation. The language model judges risks, reads signs and names what it sees; a segmentation module turns that into a live risk map that steers the walking and navigation policies. ANYmal completed kilometre-long hikes in alpine and urban terrain with minimal intervention. I was lead research engineer and second author; the work is published in Science Robotics.",
+      "tags": [
+        "ANYmal",
+        "navigation",
+        "vision-language models",
+        "reinforcement learning",
+        "field robotics"
+      ],
+      "links": [
+        {
+          "label": "Science Robotics",
+          "url": "https://doi.org/10.1126/scirobotics.aee1549"
+        },
+        {
+          "label": "arXiv",
+          "url": "https://arxiv.org/abs/2611.25215"
+        },
+        {
+          "label": "Project page",
+          "url": "https://roam-hiking.github.io"
+        }
+      ]
+    },
+    {
+      "slug": "llm-ctf",
+      "short": "LLM security",
+      "title": "LLM security: capture-the-flag",
+      "when": "2024",
+      "where": "IEEE SaTML 2024 · Team RSLLM",
+      "biome": "ctf",
+      "robot": "messages",
+      "tagline": "Hiding a secret inside a language model, and trying to steal everyone else's.",
+      "description": "At IEEE SaTML 2024, each team first built a defence that stops a language model from leaking a secret in its system prompt, then attacked the other teams' defences. Our team placed 2nd out of more than 50. Every defence in the competition was broken at least once; the lessons and a dataset of over 137,000 attack chats were published at NeurIPS 2024.",
+      "tags": [
+        "large language models",
+        "LLM security",
+        "prompt injection",
+        "red teaming"
+      ],
+      "links": [
+        {
+          "label": "Paper (NeurIPS 2024)",
+          "url": "https://arxiv.org/abs/2406.07954"
+        }
+      ]
+    },
+    {
+      "slug": "monkeys",
+      "short": "Monkeys",
+      "title": "ANYmal meets wild monkeys",
+      "when": "2022",
+      "where": "KwaZulu-Natal, South Africa · ETH Zurich",
+      "biome": "savanna",
+      "robot": "monkeystudy",
+      "tagline": "An interactive study between a legged robot and wild monkeys.",
+      "description": "ANYmal walked among wild monkeys in the South African bush. To get around on its own it had to understand the ground: which patches are thorn bush or rock, and where it is safe to place its feet. When the monkeys were offered food they had not seen before, a loudspeaker on the robot played their food call, and we studied whether they follow the robot's choice.",
+      "tags": [
+        "ANYmal",
+        "semantic navigation",
+        "field research",
+        "animal behaviour",
+        "social learning"
+      ],
+      "links": [
+        {
+          "label": "Video",
+          "url": "https://youtu.be/G31SKY-cNnE"
+        }
+      ]
+    },
+    {
+      "slug": "racer",
+      "short": "DARPA RACER",
+      "title": "DARPA RACER",
+      "when": "2021–2022",
+      "where": "NASA Jet Propulsion Laboratory",
+      "biome": "desert",
+      "robot": "racer",
+      "tagline": "Fast off-road driving through the desert: teaching a vehicle which ground is safe, without human labels.",
+      "description": "Fast off-road driving needs to tell safe ground from risky terrain. Besides training and deploying multi-class segmentation models on real and synthetic data, I developed a self-supervised method that learns this from the vehicle's own past drives: its trajectory is projected into the camera image, and an autoencoder trained only on driven terrain flags everything it reconstructs poorly as high risk. It separated ground from vegetation with 81–85% accuracy on two test sites (first author, IROS 2022).",
+      "tags": [
+        "off-road driving",
+        "semantic segmentation",
+        "traversability",
+        "self-supervised learning"
+      ],
+      "links": [
+        {
+          "label": "Paper (IROS 2022)",
+          "url": "https://arxiv.org/abs/2208.01329"
+        }
+      ]
+    },
+    {
+      "slug": "subt",
+      "short": "DARPA SubT",
+      "title": "DARPA Subterranean Challenge",
+      "when": "2021–2022",
+      "where": "NASA Jet Propulsion Laboratory · Team CoSTAR",
+      "biome": "cave",
+      "robot": "subt",
+      "tagline": "Robots exploring mines and caves on their own: finding objects, knowing where they are, and predicting slips.",
+      "description": "Part of Team CoSTAR's NeBula autonomy system, in which a team of walking, driving and flying robots explores together and shares one map. I worked on detecting the competition's objects in the cave, on state estimation that fuses lidar, camera and IMU, and on a model that predicts a slip from the robot's own joint and body sensing before it happens, so the robot can switch to a more careful gait and mark the area as risky on its traversability map.",
+      "tags": [
+        "Spot",
+        "object detection",
+        "state estimation",
+        "slip prediction",
+        "proprioception",
+        "multi-robot collaboration"
+      ],
+      "links": [
+        {
+          "label": "PrePARE paper",
+          "url": "https://arxiv.org/abs/2208.00322"
+        },
+        {
+          "label": "NeBula addendum",
+          "url": "https://arxiv.org/abs/2504.13461"
+        }
+      ]
+    },
+    {
+      "slug": "early",
+      "short": "Early work",
+      "title": "Early work: construction robots and manipulation",
+      "when": "2019–2020",
+      "where": "ETH Zurich · ABB Corporate Research",
+      "biome": "factory",
+      "robot": "early",
+      "tagline": "A robot arm that plasters walls, and a two-armed robot that learns tasks by voice.",
+      "description": "At ETH Zurich our student team built CHIRON, a construction robot with a six-axis hydraulic arm. For my bachelor thesis we made it plaster: software that references a wall and plans the spray path, and a modified spray gun that starts and stops precisely while the arm moves. It sprayed a flat wall segment remotely, with a surface quality better than manual work. At ABB Corporate Research I then worked with the two-armed YuMi robot on teaching manipulation tasks by voice, with a real-time vision pipeline and a simulation for grasping, collision avoidance and human-robot handover.",
+      "tags": [
+        "construction robotics",
+        "manipulation",
+        "YuMi",
+        "bachelor thesis"
+      ],
+      "links": []
+    }
+  ]
+}
